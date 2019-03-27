@@ -32,7 +32,7 @@ Pyright offers the following language service features:
 
 * Hover tool tips that display type information
 * Links to symbol definitions
-* Smart priority queuing for “live” feedback during editing
+* Smart priority queuing for interactive feedback during editing
 
 
 ## Documentation
@@ -46,14 +46,14 @@ Pyright offers the following language service features:
 Pyright currently provides support for Python 3.0 and newer. There is currently no plan to support older versions.
 
 ## FAQ
-Q: What is the difference between pyright and the [Microsoft Python VS Code plugin](https://github.com/Microsoft/vscode-python)?
+**Q:** What is the difference between pyright and the [Microsoft Python VS Code plugin](https://github.com/Microsoft/vscode-python)?
 
-A: The Python VS Code plugin is the official Python support extension for VS Code. It is officially supported by a team of engineers at Microsoft. It supports a diverse array of features including debugging, linter plugins, type checking plugins, and much more. Pyright is focused entirely on type checking. It is a side project with no dedicated team.
+**A:** The Python VS Code plugin is the official Python support extension for VS Code. It is officially supported by a team of engineers at Microsoft. It supports a diverse array of features including debugging, linter plugins, type checking plugins, and much more. Pyright is focused entirely on type checking. It is a side project with no dedicated team.
 
 
-Q: What is the difference between pyright and the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server)?
+**Q:** What is the difference between pyright and the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server)?
 
-A: The Microsoft Python Language Server is a [language server protocol (LSP)](https://microsoft.github.io/language-server-protocol/) implementation that works with the Microsoft Python VS Code plugin, and it is officially supported by a team of Microsoft engineers. It also provides type checking capabilities. Pyright provides overlapping functionality but includes some unique features such as more configurabilty, command-line execution, and better performance.
+**A:** The Microsoft Python Language Server is a [language server protocol (LSP)](https://microsoft.github.io/language-server-protocol/) implementation that works with the Microsoft Python VS Code plugin, and it is officially supported by a team of Microsoft engineers. It also provides type checking capabilities. Pyright provides overlapping functionality but includes some unique features such as more configurabilty, command-line execution, and better performance.
 
 
 ## Installation
@@ -102,6 +102,9 @@ Pyright is a work in progress. The following functionality is not yet finished. 
 
 * Add enforcement of covariance and contravariance
 * Type inference for generators and async functions
+* Add support for inference of subclass type vars based on method parameter types declared in subclass
+* Validate consistency of subclass type vars across all declared methods
+* Report errors for non-quoted forward references of types
 * Support for old-style type annotations within comments
 * Address the many TODO comments in the code
 * Better handling of function decorators (don't punt on type checking)

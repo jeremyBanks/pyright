@@ -5,7 +5,7 @@
       "name": "Pyright CLI",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceRoot}/server/src/pyright.ts",
+      "program": "${workspaceRoot}/index.debug.js",
       "protocol": "inspector",
       "cwd": "${workspaceRoot}",
       "preLaunchTask": "npm: build:analyzer",
@@ -38,7 +38,7 @@
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${workspaceRoot}/client/out/src/extension.js",
-      "preLaunchTask": "npm: build",
+      "preLaunchTask": "npm: build:clientServer",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/client"
       ],

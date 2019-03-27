@@ -113,7 +113,7 @@ export abstract class SemanticAnalyzer extends ParseTreeWalker {
                     `Import '${ importResult.importName }' could not be resolved`, node);
             } else if (importResult.importType === ImportType.ThirdParty) {
                 if (!importResult.isStubFile) {
-                    this._addDiagnostic(this._fileInfo.configOptions.reportMissingImports,
+                    this._addDiagnostic(this._fileInfo.configOptions.reportMissingTypeStubs,
                         `Stub file not found for '${ importResult.importName }'`, node);
                 }
             }
@@ -126,7 +126,10 @@ export abstract class SemanticAnalyzer extends ParseTreeWalker {
         this.walkMultiple(node.decorators);
 
         let classFlags = ClassTypeFlags.None;
-        if (this._currentScope.getType() === ScopeType.BuiltIn || this._fileInfo.isTypingStubFile) {
+        if (this._currentScope.getType() === ScopeType.BuiltIn ||
+                this._fileInfo.isTypingStubFile ||
+                this._fileInfo.isCollectionsStubFile) {
+
             classFlags |= ClassTypeFlags.BuiltInClass;
         }
         if (node.decorators.length > 0) {
