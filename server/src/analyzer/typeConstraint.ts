@@ -10,11 +10,9 @@
 * the value of "foo" is not None within that scope.
 */
 
-import {
-    BinaryExpressionNode, CallExpressionNode, ConstantNode,
+import { BinaryExpressionNode, CallExpressionNode, ConstantNode,
     ExpressionNode, MemberAccessExpressionNode, NameNode,
-    UnaryExpressionNode
-} from '../parser/parseNodes';
+    UnaryExpressionNode } from '../parser/parseNodes';
 import { KeywordType, OperatorType } from '../parser/tokenizerTypes';
 import { ClassType, NoneType, ObjectType, TupleType, Type, UnionType } from './types';
 import { TypeUtils } from './typeUtils';
@@ -162,7 +160,7 @@ export class IsNoneTypeConstraint extends TypeConstraint {
 }
 
 // Represents an "instanceof" check, potentially constraining a
-// union type to a single member, or a parent class to a subclass.
+// union type.
 export class InstanceOfTypeConstraint extends TypeConstraint {
     private _expression: ExpressionNode;
     private _classTypeList: ClassType[];
@@ -174,13 +172,9 @@ export class InstanceOfTypeConstraint extends TypeConstraint {
     }
 
     applyToType(node: ExpressionNode, type: Type): Type {
-        let doInstanceCheck = (objType: ObjectType): [Type] => {
-            console.log('checking whether an instance of:', objType.asString());
-            console.log('is an instance of any of:', this._classTypeList.map(t => t.asString()));
-
+        let doInstanceCheck = (objType: ObjectType) => {
             const matchingInstance = this._classTypeList.find(
                 t => TypeUtils.isInstanceOf(objType, t));
-            console.log('match? ', matchingInstance);
             if (this.isPositiveTest()) {
                 // For a positive test, see if the type is an instance of at
                 // least one of the class types.
@@ -190,44 +184,33 @@ export class InstanceOfTypeConstraint extends TypeConstraint {
                 // all class types.
                 return matchingInstance === undefined;
             }
-
-            return TypeUtils.combineTypesArray(constrainedTypes);
         };
 
         if (TypeConstraint.doesExpressionMatch(node, this._expression)) {
             if (type instanceof UnionType) {
-                let constrainedTypes = [];
-                for (const t of type.getTypes()) {
+                let remainingTypes = type.getTypes().filter(t => {
                     if (t.isAny()) {
                         // We need to assume that "Any" is always an instance and not an instance,
                         // so it matches regardless of whether the test is positive or negative.
-                        constrainedTypes.push(t);
-                        continue;
+                        return true;
                     }
 
                     if (t instanceof ObjectType) {
-                        const constrained = doInstanceCheck(t);
-                        if (constrained.length) {
-                            constrainedTypes.push(...constrained);
-                            continue;
-                        }
+                        return doInstanceCheck(t);
                     }
 
                     // All other types are never instances of a class.
-                    if (!this.isPositiveTest()) {
-                        constrainedTypes.push(t);
-                    }
-                }
+                    return !this.isPositiveTest();
+                });
 
-
-                if (constrainedTypes.length === 0) {
+                if (remainingTypes.length === 0) {
                     // TODO - we may want to return a "never" type in
                     // this case to indicate that the condition will
                     // always evaluate to false.
                     return NoneType.create();
                 }
 
-                return TypeUtils.combineTypesArray(constrainedTypes);
+                return TypeUtils.combineTypesArray(remainingTypes);
             } else if (type instanceof ObjectType) {
                 if (type.isAny()) {
                     // We need to assume that "Any" is always an instance and not an instance,
@@ -235,15 +218,9 @@ export class InstanceOfTypeConstraint extends TypeConstraint {
                     return type;
                 }
 
-                const constrained = doInstanceCheck(type);
-                if (constrained) {
-                    return TypeUtils.combineTypesArray(constrained);
+                if (doInstanceCheck(type)) {
+                    return type;
                 } else {
-                    // TODO: remove temporarily fake-never-type
-                    return Object.apply(Object.create(NoneType), {
-                        asStringInternal: () => 'None[because it can never happen]'
-                    });
-
                     // TODO - we may want to return a "never" type in
                     // this case to indicate that the condition will
                     // always evaluate to false.
@@ -267,8 +244,8 @@ export class TypeConstraintBuilder {
     // conditional), return all of the type constraints that apply both
     // within the "if" clause and the "else" clause.
     static buildTypeConstraints(testExpression: ExpressionNode,
-        typeEvaluator: (node: ExpressionNode) => Type):
-        TypeConstraintResults | undefined {
+            typeEvaluator: (node: ExpressionNode) => Type):
+                TypeConstraintResults | undefined {
 
         if (testExpression instanceof BinaryExpressionNode) {
             let results: TypeConstraintResults = {
@@ -279,9 +256,9 @@ export class TypeConstraintBuilder {
             // Look for "X is None" or "X is not None". These are commonly-used
             // patterns used in control flow.
             if (testExpression.operator === OperatorType.Is ||
-                testExpression.operator === OperatorType.IsNot) {
+                    testExpression.operator === OperatorType.IsNot) {
                 if (testExpression.rightExpression instanceof ConstantNode &&
-                    testExpression.rightExpression.token.keywordType === KeywordType.None) {
+                        testExpression.rightExpression.token.keywordType === KeywordType.None) {
 
                     const trueConstraint = new IsNoneTypeConstraint(testExpression.leftExpression, true);
                     const falseConstraint = new IsNoneTypeConstraint(testExpression.leftExpression, false);
@@ -353,7 +330,7 @@ export class TypeConstraintBuilder {
                 }
             }
         } else if (testExpression instanceof NameNode ||
-            testExpression instanceof MemberAccessExpressionNode) {
+                testExpression instanceof MemberAccessExpressionNode) {
             if (TypeConstraint.isSupportedExpression(testExpression)) {
                 const trueConstraint = new TruthyTypeConstraint(testExpression, true);
                 const falseConstraint = new TruthyTypeConstraint(testExpression, false);
@@ -364,8 +341,8 @@ export class TypeConstraintBuilder {
             }
         } else if (testExpression instanceof CallExpressionNode) {
             if (testExpression.leftExpression instanceof NameNode &&
-                testExpression.leftExpression.nameToken.value === 'isinstance' &&
-                testExpression.arguments.length === 2) {
+                    testExpression.leftExpression.nameToken.value === 'isinstance' &&
+                    testExpression.arguments.length === 2) {
 
                 // Make sure the first parameter is a supported expression type
                 // and the second parameter is a valid class type or a tuple
@@ -386,7 +363,7 @@ export class TypeConstraintBuilder {
                     } else if (classType instanceof TupleType) {
                         let tupleBaseTypes = classType.getEntryTypes();
                         if (tupleBaseTypes.length > 0 &&
-                            tupleBaseTypes.find(t => !(t instanceof ClassType)) === undefined) {
+                                tupleBaseTypes.find(t => !(t instanceof ClassType)) === undefined) {
                             const classTypeList = tupleBaseTypes.map(t => t as ClassType);
                             const trueConstraint = new InstanceOfTypeConstraint(arg0Expr, classTypeList, true);
                             const falseConstraint = new InstanceOfTypeConstraint(arg0Expr, classTypeList, false);
